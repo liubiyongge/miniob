@@ -18,6 +18,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/stmt/filter_stmt.h"
 #include "storage/db/db.h"
 #include "storage/table/table.h"
+#include "util/date.h"
 
 FilterStmt::~FilterStmt()
 {
@@ -103,7 +104,24 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
     filter_unit->set_left(filter_obj);
   } else {
     FilterObj filter_obj;
-    filter_obj.init_value(condition.left_value);
+    
+    Table *table = nullptr;
+    const FieldMeta *field = nullptr;
+    rc = get_table_and_field(db, default_table, tables, condition.right_attr, table, field);
+    
+    if(field->type() == DATES && condition.left_value.attr_type() == CHARS){
+        int32_t date;
+        RC res = string_to_date(condition.left_value.get_string(), date);
+        Value val;
+        if(res != RC::SUCCESS){
+          return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+        }else{
+          val.set_date(date);
+        }
+        filter_obj.init_value(val);
+    }else{
+      filter_obj.init_value(condition.left_value);
+    }
     filter_unit->set_left(filter_obj);
   }
 
@@ -120,7 +138,22 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
     filter_unit->set_right(filter_obj);
   } else {
     FilterObj filter_obj;
-    filter_obj.init_value(condition.right_value);
+    Table *table = nullptr;
+    const FieldMeta *field = nullptr;
+    rc = get_table_and_field(db, default_table, tables, condition.left_attr, table, field);
+    if(field->type() == DATES && condition.right_value.attr_type() == CHARS){
+        int32_t date;
+        RC res = string_to_date(condition.right_value.get_string(), date);
+        Value val;
+        if(res != RC::SUCCESS){
+          return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+        }else{
+          val.set_date(date);
+        }
+        filter_obj.init_value(val);
+    }else{
+      filter_obj.init_value(condition.right_value);
+    }
     filter_unit->set_right(filter_obj);
   }
 
