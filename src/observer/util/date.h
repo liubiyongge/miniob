@@ -40,7 +40,7 @@ inline RC string_to_date(const std::string str, int32_t &date)
 
     //validate
     if(year < 1900 || year > 9999 ||
-      (month <= 0 || month >= 12) ||
+      (month <= 0 || month > 12) ||
       (day <= 0 || day > 31)){
         return RC::INVALID_ARGUMENT;
     }
