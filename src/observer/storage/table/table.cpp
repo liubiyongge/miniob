@@ -15,7 +15,7 @@ See the Mulan PSL v2 for more details. */
 #include <limits.h>
 #include <string.h>
 #include <algorithm>
-
+#include <cstdio>
 #include "common/defs.h"
 #include "storage/table/table.h"
 #include "storage/table/table_meta.h"
@@ -125,6 +125,43 @@ RC Table::create(int32_t table_id,
   LOG_INFO("Successfully create table %s:%s", base_dir, name);
   return rc;
 }
+
+RC Table::destroy()
+{
+  RC rc = sync();//刷新所有脏页
+  if(rc != RC::SUCCESS) return rc;
+  std::string meta_file = table_meta_file(base_dir_.c_str(), name());
+  if(std::remove(meta_file.c_str()) != 0){
+      rc = RC::FILE_NOT_EXIST;
+      LOG_ERROR("Failed to delete meta_file. table=%s, rc=%d:%s",
+          name(),
+          rc,
+          strrc(rc));
+      return rc;    
+  }
+  std::string data_file = table_data_file(base_dir_.c_str(), name());
+  if(std::remove(data_file.c_str()) != 0){
+      rc = RC::FILE_NOT_EXIST;
+      LOG_ERROR("Failed to delete data_file. table=%s, rc=%d:%s",
+          name(),
+          rc,
+          strrc(rc));  
+      return rc;  
+  }
+  for (Index *index : indexes_) {
+    std::string index_file = table_index_file(base_dir_.c_str(), name(), index->index_meta().name());
+    if(std::remove(index_file.c_str()) != 0){
+      LOG_ERROR("Failed to delete index. table=%s, index=%s, rc=%d:%s",
+          name(),
+          index->index_meta().name(),
+          rc,
+          strrc(rc));
+      return rc;
+    }
+  }
+  return rc;
+}
+
 
 RC Table::open(const char *meta_file, const char *base_dir)
 {
