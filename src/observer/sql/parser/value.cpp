@@ -186,7 +186,14 @@ std::string Value::to_string() const
   }
   return os.str();
 }
-
+bool Value::like(const Value &other) const
+{
+  if (this->attr_type_ == other.attr_type_ && this->attr_type_ == CHARS){
+    return common::isMatch(this->str_value_, other.str_value_);
+  }
+  LOG_WARN("not supported");
+  return -1;  // TODO return rc?  
+}
 int Value::compare(const Value &other) const
 {
   if (this->attr_type_ == other.attr_type_) {

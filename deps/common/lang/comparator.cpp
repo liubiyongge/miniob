@@ -40,6 +40,53 @@ int compare_float(void *arg1, void *arg2)
   return 0;
 }
 
+//match return 1, not return 0
+int isMatch(const std::string& str, const std::string& pattern) {
+    int patternIdx = 0;
+    int strIdx = 0;
+
+    while (patternIdx < pattern.length() && strIdx < str.length()) {
+        if (pattern[patternIdx] == '%') {
+            // Match zero or more characters
+            // Move pattern index forward
+            patternIdx++;
+
+            // If '%' is the last character in the pattern, it matches the rest of the string
+            if (patternIdx == pattern.length()) {
+                return true;
+            }
+
+            // Try to match the rest of the pattern by iterating through the string
+            while (strIdx < str.length()) {
+                if (isMatch(pattern.substr(patternIdx), str.substr(strIdx))) {
+                    return true;
+                }
+                strIdx++;
+            }
+        } else if (pattern[patternIdx] == '_') {
+            // Match a single character
+            // Move both pattern and string indices forward
+            patternIdx++;
+            strIdx++;
+        } else if (pattern[patternIdx] == str[strIdx]) {
+            // Match the characters at the current positions
+            patternIdx++;
+            strIdx++;
+        } else {
+            // Characters don't match
+            return false;
+        }
+    }
+
+    // Check if any remaining pattern characters are '%'
+    while (patternIdx < pattern.length() && pattern[patternIdx] == '%') {
+        patternIdx++;
+    }
+
+    // If both pattern and string indices reach the end, they match
+    return patternIdx == pattern.length() && strIdx == str.length();
+}
+
 int compare_string(void *arg1, int arg1_max_length, void *arg2, int arg2_max_length)
 {
   const char *s1 = (const char *)arg1;

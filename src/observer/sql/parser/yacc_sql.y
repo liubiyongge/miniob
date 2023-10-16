@@ -92,6 +92,8 @@ ArithmeticExpr *create_arithmetic_expression(ArithmeticExpr::Type type,
         DATA
         INFILE
         EXPLAIN
+        LK
+        NOT
         EQ
         LT
         GT
@@ -642,7 +644,9 @@ comp_op:
     | LE { $$ = LESS_EQUAL; }
     | GE { $$ = GREAT_EQUAL; }
     | NE { $$ = NOT_EQUAL; }
-    ;
+    | LK {$$ = LIKE_TO; }
+    | NOT LK {$$ = NOT_LIKE;}
+    ; 
 
 load_data_stmt:
     LOAD DATA INFILE SSS INTO TABLE ID 
